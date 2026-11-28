@@ -49,5 +49,12 @@ class VendorDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "owner_email", "slug", "status", "created_at")
 
 
+class PublicVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vendor
+        fields = ("id", "store_name", "slug", "description", "created_at")
+        read_only_fields = fields
+
+
 class VendorReviewSerializer(serializers.Serializer):
     action = serializers.ChoiceField(choices=("approve", "reject"))

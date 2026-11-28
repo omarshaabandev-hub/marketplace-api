@@ -210,3 +210,62 @@ def test_cannot_reject_an_approved_vendor(api_client, make_user, make_vendor):
     assert response.status_code == 409
     vendor.refresh_from_db()
     assert vendor.status == Vendor.Status.APPROVED
+
+
+def test_public_vendor_list_only_returns_approved_stores(api_client, make_user, make_vendor):
+    approved = make_vendor(
+        make_user("approved@test.com"),
+        store_name="Approved Store",
+        slug="approved-store",
+        status=Vendor.Status.APPROVED,
+    )
+    make_vendor(
+        make_user("pending@test.com"),
+        store_name="Pending Store",
+        slug="pending-store",
+    )
+    make_vendor(
+        make_user("rejected@test.com"),
+        store_name="Rejected Store",
+        slug="rejected-store",
+        status=Vendor.Status.REJECTED,
+    )
+
+    response = api_client.get(reverse("vendors:list"))
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.data] == [approved.id]
+    assert response.data[0]["slug"] == "approved-store"
+    assert "owner_email" not in response.data[0]
+
+
+def test_public_vendor_detail_returns_approved_store(api_client, make_user, make_vendor):
+    make_vendor(
+        make_user("approved@test.com"),
+        store_name="Approved Store",
+        slug="approved-store",
+        status=Vendor.Status.APPROVED,
+    )
+
+    response = api_client.get(reverse("vendors:detail", kwargs={"slug": "approved-store"}))
+
+    assert response.status_code == 200
+    assert response.data["store_name"] == "Approved Store"
+    assert response.data["slug"] == "approved-store"
+    assert "owner_email" not in response.data
+
+
+@pytest.mark.parametrize("vendor_status", [Vendor.Status.PENDING, Vendor.Status.REJECTED])
+def test_public_vendor_detail_hides_unapproved_store(
+    api_client, make_user, make_vendor, vendor_status
+):
+    make_vendor(
+        make_user("unapproved@test.com"),
+        store_name="Unapproved Store",
+        slug="unapproved-store",
+        status=vendor_status,
+    )
+
+    response = api_client.get(reverse("vendors:detail", kwargs={"slug": "unapproved-store"}))
+
+    assert response.status_code == 404
