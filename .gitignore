@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .env
+.evn
 .coverage
 htmlcov/
 .pytest_cache/
@@ -10,3 +11,9 @@ staticfiles/
 media/
 .vscode/
 .idea/
+db.sqlite3
+.agents/
+.codex/
+.aws/
+.env.*
+!.env.example
