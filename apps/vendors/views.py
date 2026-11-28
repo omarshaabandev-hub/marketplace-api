@@ -8,10 +8,28 @@ from apps.vendors import services
 from apps.vendors.models import Vendor
 from apps.vendors.permissions import IsVendorOwner
 from apps.vendors.serializers import (
+    PublicVendorSerializer,
     VendorApplySerializer,
     VendorDetailSerializer,
     VendorReviewSerializer,
 )
+
+
+class PublicVendorListView(generics.ListAPIView):
+    """List approved vendor stores for public browsing."""
+
+    serializer_class = PublicVendorSerializer
+    permission_classes = (permissions.AllowAny,)
+    queryset = Vendor.objects.filter(status=Vendor.Status.APPROVED)
+
+
+class PublicVendorDetailView(generics.RetrieveAPIView):
+    """Show an approved vendor store by its slug."""
+
+    serializer_class = PublicVendorSerializer
+    permission_classes = (permissions.AllowAny,)
+    lookup_field = "slug"
+    queryset = Vendor.objects.filter(status=Vendor.Status.APPROVED)
 
 
 class VendorApplyView(generics.CreateAPIView):
